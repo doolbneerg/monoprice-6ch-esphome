@@ -18,7 +18,6 @@ namespace esphome
         {
             ESP_LOGV(TAG, "Setting zone %u : %s", this->status_->zone, ONOFF(state));
             this->status_->set(this->data_type_, (uint8_t)state);
-            // this->status_->update(this->data_type_, (uint8_t) state);
         }
 
         void Monoprice10761Switch::dump_config()

@@ -35,7 +35,6 @@ namespace esphome
                 if (value.compare(this->parent_->inputs_[i].name) == 0)
                 {
                     this->status_->set(this->data_type_, i + 1);
-                    // this->status_->update(this->data_type_, i+1);
                     return;
                 }
             }
