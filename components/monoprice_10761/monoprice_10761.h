@@ -24,12 +24,6 @@
 #include <vector>
 #include <Arduino.h>
 
-#ifdef ARDUINO_ARCH_ESP8266
-#include <ESPAsyncTCP.h>
-#else
-#include <AsyncTCP.h>
-#endif
-
 #define INDEX_TO_ZONE_ID(index) ((((index / 6) + 1) * 10) + (index % 6) + 1)
 #define ZONE_ID_TO_INDEX(zone_id) (((zone_id / 10) - 1) * 6 + ((zone_id % 10) - 1))
 
@@ -49,7 +43,7 @@ enum class ZoneStatusDataType : uint8_t {
     BS = 0x06,  // Bass - 00-14
     BL = 0x07,  // Balance - 00-20
     CH = 0x08,  // Channel - 01-06
-    LS = 0x09,  // Keypad status - 00,01
+    LS = 0x09,  // Keypad status - 00, 01
 
     UNKNOWN = 0x0a // keep it as the max value + 1
 };
@@ -151,7 +145,6 @@ public:
     void loop() override;
     void update() override;
     void dump_config() override;
-    void on_shutdown() override;
 
     void write_command(const uint8_t* cmd, size_t len);
 
@@ -163,14 +156,15 @@ public:
         this->uart_ = parent;
         uart::UARTDevice::set_uart_parent(parent);
     }
-    void set_port(uint16_t port) { this->port_ = port; }
-    void set_expansions(uint16_t expansions) {
+
+    void set_expansions(uint16_t expansions) {        
         this->zone_count_ = (expansions+1)*6;
         this->zones_ = new ZoneStatus*[this->zone_count_];
         for(unsigned char i = 0; i < this->zone_count_; i++){
-          this->zones_[i] = new ZoneStatus(INDEX_TO_ZONE_ID(i), [this](const uint8_t* buf, size_t len){this->write_command(buf,len);});
+            this->zones_[i] = new ZoneStatus(INDEX_TO_ZONE_ID(i), [this](const uint8_t* buf, size_t len){this->write_command(buf,len);});
         }
-     }
+    }
+
     void set_input(uint8_t num, const char* name, bool hide){
         this->inputs_[num-1].number = num;
         this->inputs_[num-1].name = std::string(name);
@@ -182,34 +176,21 @@ public:
         std::string name;
         bool hide;
     };
+
     Input inputs_[6];
 
 protected:
     void cleanup();
     void read_from_rs232();
-    void write_to_rs232();
-
-    struct Client {
-        Client(AsyncClient *client, std::vector<uint8_t> &recv_buf);
-        ~Client();
-
-        AsyncClient *tcp_client{nullptr};
-        std::string identifier{};
-        bool disconnected{false};
-    };
 
     unsigned char zone_count_{0};
     unsigned int errors_{0};
     ZoneStatus** zones_{0};
     esphome::uart::UARTComponent *uart_{nullptr};
-    AsyncServer server_{0};
-    uint16_t port_{4999};
-    std::vector<uint8_t> client_recv_buf_{};
     int send_client_{0};
     std::vector<char> serial_read_buf_{};
-    std::vector<std::unique_ptr<Client>> clients_{};
 private:
-    void write_to_clients(const char* buf, size_t len);
+    void parse_command(const char* buf, size_t len);
 };
 
 } // namespace monoprice_10761

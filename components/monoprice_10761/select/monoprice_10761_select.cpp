@@ -28,7 +28,7 @@ void Monoprice10761Select::control(const std::string &value) {
     for(uint8_t i = 0; i < 6; i++){
         if(value.compare(this->parent_->inputs_[i].name) == 0){
             this->status_->set(this->data_type_, i+1);
-            this->status_->update(this->data_type_, i+1);
+            // this->status_->update(this->data_type_, i+1);
             return;
         }
     }
