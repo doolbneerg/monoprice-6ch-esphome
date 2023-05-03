@@ -184,16 +184,16 @@ void Monoprice10761::dump_config()
 void ZoneStatus::update(char *zoneStatus)
 {
     const unsigned char base = 3;
-    this->update(ZoneStatusDataType::PA, TO_BOOL(zoneStatus, base + 0));
-    this->update(ZoneStatusDataType::PR, TO_BOOL(zoneStatus, base + 2));
-    this->update(ZoneStatusDataType::MU, TO_BOOL(zoneStatus, base + 4));
-    this->update(ZoneStatusDataType::DT, TO_BOOL(zoneStatus, base + 6));
-    this->update(ZoneStatusDataType::VO, TO_UINT8T(zoneStatus, base + 8));
-    this->update(ZoneStatusDataType::TR, TO_UINT8T(zoneStatus, base + 10));
-    this->update(ZoneStatusDataType::BS, TO_UINT8T(zoneStatus, base + 12));
-    this->update(ZoneStatusDataType::BL, TO_UINT8T(zoneStatus, base + 14));
-    this->update(ZoneStatusDataType::CH, TO_UINT8T(zoneStatus, base + 16));
-    this->update(ZoneStatusDataType::LS, TO_BOOL(zoneStatus, base + 18));
+    this->update(ZoneStatusDataType::PublicAnnouncement, TO_BOOL(zoneStatus, base + 0));
+    this->update(ZoneStatusDataType::Power, TO_BOOL(zoneStatus, base + 2));
+    this->update(ZoneStatusDataType::Mute, TO_BOOL(zoneStatus, base + 4));
+    this->update(ZoneStatusDataType::DoNotDisturb, TO_BOOL(zoneStatus, base + 6));
+    this->update(ZoneStatusDataType::Volume, TO_UINT8T(zoneStatus, base + 8));
+    this->update(ZoneStatusDataType::Trebel, TO_UINT8T(zoneStatus, base + 10));
+    this->update(ZoneStatusDataType::Bass, TO_UINT8T(zoneStatus, base + 12));
+    this->update(ZoneStatusDataType::Balance, TO_UINT8T(zoneStatus, base + 14));
+    this->update(ZoneStatusDataType::Channel, TO_UINT8T(zoneStatus, base + 16));
+    this->update(ZoneStatusDataType::KeypadStatus, TO_BOOL(zoneStatus, base + 18));
 }
 
 void ZoneStatus::update(ZoneStatusDataType type, uint8_t val)
@@ -217,16 +217,16 @@ void ZoneStatus::dump()
 {
     ESP_LOGD(TAG, "ZoneStatus(%u): pa(%u) pr(%u) mu(%u) dt(%u) vo(%u) tr(%u) bs(%u) bl(%u) ch(%u) ls(%u)",
              this->zone_,
-             this->data_[(uint8_t)ZoneStatusDataType::PA],
-             this->data_[(uint8_t)ZoneStatusDataType::PR],
-             this->data_[(uint8_t)ZoneStatusDataType::MU],
-             this->data_[(uint8_t)ZoneStatusDataType::DT],
-             this->data_[(uint8_t)ZoneStatusDataType::VO],
-             this->data_[(uint8_t)ZoneStatusDataType::TR],
-             this->data_[(uint8_t)ZoneStatusDataType::BS],
-             this->data_[(uint8_t)ZoneStatusDataType::BL],
-             this->data_[(uint8_t)ZoneStatusDataType::CH],
-             this->data_[(uint8_t)ZoneStatusDataType::LS]);
+             this->data_[(uint8_t)ZoneStatusDataType::PublicAnnouncement],
+             this->data_[(uint8_t)ZoneStatusDataType::Power],
+             this->data_[(uint8_t)ZoneStatusDataType::Mute],
+             this->data_[(uint8_t)ZoneStatusDataType::DoNotDisturb],
+             this->data_[(uint8_t)ZoneStatusDataType::Volume],
+             this->data_[(uint8_t)ZoneStatusDataType::Trebel],
+             this->data_[(uint8_t)ZoneStatusDataType::Bass],
+             this->data_[(uint8_t)ZoneStatusDataType::Balance],
+             this->data_[(uint8_t)ZoneStatusDataType::Channel],
+             this->data_[(uint8_t)ZoneStatusDataType::KeypadStatus]);
 }
 
 void ZoneStatus::set(ZoneStatusDataType type, const unsigned char val)
