@@ -28,52 +28,11 @@ using namespace monoprice_10761;
 void Monoprice10761::setup() {
     this->serial_read_buf_.reserve(BUF_SIZE);
 
-    ESP_LOGCONFIG(TAG, "Setting up stream server for external apps on port %d...", this->port_);
-    this->client_recv_buf_.reserve(BUF_SIZE);
-
-    this->server_ = AsyncServer(this->port_);
-    this->server_.begin();
-    this->server_.onClient([this](void *h, AsyncClient *tcpClient) {
-        if(tcpClient == nullptr)
-            return;
-
-        this->clients_.push_back(std::unique_ptr<Client>(new Client(tcpClient, this->client_recv_buf_)));
-    }, this);
     this->update();
 }
 
 void Monoprice10761::loop() {
-    this->cleanup();
     this->read_from_rs232();
-    this->write_to_rs232();
-}
-
-void Monoprice10761::cleanup() {
-    int count;
-
-    // find first disconnected, and then rewrite rest to keep order
-    // to keep `send_client_` be correct
-    for (count = 0; count < this->clients_.size(); ++count) {
-        if (this->clients_[count]->disconnected)
-            break;
-    }
-
-    for (int i = count; i < this->clients_.size(); ++i) {
-        auto& client = this->clients_[i];
-
-        if (!client->disconnected) {
-            this->clients_[count++].swap(client);
-            continue;
-        }
-
-        ESP_LOGD(TAG, "Client %s disconnected", this->clients_[i]->identifier.c_str());
-
-        if (this->send_client_ > i) {
-            this->send_client_--;
-        }
-    }
-
-    this->clients_.resize(count);
 }
 
 void Monoprice10761::update(){
@@ -111,14 +70,13 @@ void Monoprice10761::read_from_rs232() {
                 // debug_buf[line_len] = 0;
                 // ESP_LOGD(TAG, "READ: %s", debug_buf);
 
-                this->write_to_clients(this->serial_read_buf_.data(), line_len);
+                this->parse_command(this->serial_read_buf_.data(), line_len);
 
                 this->serial_read_buf_.clear();
             }
         }
     }
 }
-
 
 char* get_command_as_string(const char* buf_input, size_t len_input){
     char* buf = (char*) buf_input;
@@ -134,6 +92,7 @@ char* get_command_as_string(const char* buf_input, size_t len_input){
         buf++;
         len--;
     }
+
     while(len > 0 &&
         (
             buf[len-1] == '#' ||
@@ -152,18 +111,13 @@ char* get_command_as_string(const char* buf_input, size_t len_input){
 }
 
 
-void Monoprice10761::write_to_clients(const char* buf_input, size_t len_input){
+void Monoprice10761::parse_command(const char* buf_input, size_t len_input) {
     char* c_str = get_command_as_string(buf_input, len_input);
     size_t len = strlen(c_str);
 
     // ESP_LOGI(TAG,"Read: %s", c_str);
 
-    for (auto const& client : this->clients_){
-        client->tcp_client->write(c_str, len);
-        client->tcp_client->write("\r\n#");
-    }
-
-    if(c_str[0] == '>' || c_str[0] == '<'){
+    if(c_str[0] == '>' || c_str[0] == '<') {
         char _1 = c_str[1];
         char _2 = c_str[2];
         unsigned char zone = ((_1 - '0') * 10) + (_2 - '0');
@@ -173,9 +127,9 @@ void Monoprice10761::write_to_clients(const char* buf_input, size_t len_input){
             ESP_LOGD(TAG, "Zone %i is out of range of configured zone count %i", zone, this->zone_count_);
         } else {
             ZoneStatus* status = this->zones_[zoneIndex];
-            if(c_str[0] == '>'){
+            if(c_str[0] == '>') {
                 status->update(c_str);
-            } else{
+            } else {
                 ZoneStatusDataType type = ZoneStatus::str_to_data_type(c_str+3);
                 if(type == ZoneStatusDataType::UNKNOWN){
                     ESP_LOGE(TAG, "Unknown attribute: %c%c", c_str[3],c_str[4]);
@@ -188,61 +142,22 @@ void Monoprice10761::write_to_clients(const char* buf_input, size_t len_input){
             status->dump();
         }
     }
-    if(strcmp(c_str,"Command Error.") == 0){
+
+    if(strcmp(c_str,"Command Error.") == 0) {
         ESP_LOGE(TAG, "Command error received");
         this->errors_++;
     }
+
     delete c_str;
 }
 
-void Monoprice10761::write_command(const uint8_t* cmd, size_t len){
+void Monoprice10761::write_command(const uint8_t* cmd, size_t len) {
     this->uart_->write_array(cmd, len);
-}
-
-void Monoprice10761::write_to_rs232() {
-    size_t len;
-    while ((len = this->client_recv_buf_.size()) > 0) {
-        this->uart_->write_array(this->client_recv_buf_.data(), len);
-
-        // Debug info
-        char debug_buf[len+1];
-        memcpy(debug_buf, this->client_recv_buf_.data(), len);
-        debug_buf[len] = 0;
-
-        this->client_recv_buf_.erase(this->client_recv_buf_.begin(), this->client_recv_buf_.begin() + len);
-    }
+    this->read_from_rs232();
 }
 
 void Monoprice10761::dump_config() {
-    ESP_LOGCONFIG(TAG, "Monoprice 10761 Stream Server:");
-    ESP_LOGCONFIG(TAG, "  Port: %u", this->port_);
     this->check_uart_settings(9600);
-}
-
-void Monoprice10761::on_shutdown() {
-    for (auto &client : this->clients_)
-    client->tcp_client->close(true);
-}
-
-Monoprice10761::Client::Client(AsyncClient *client, std::vector<uint8_t> &recv_buf) :
-tcp_client{client}, identifier{client->remoteIP().toString().c_str()}, disconnected{false} {
-    ESP_LOGD(TAG, "New client connected from %s", this->identifier.c_str());
-
-    this->tcp_client->onError(     [this](void *h, AsyncClient *client, int8_t error)  { this->disconnected = true; });
-    this->tcp_client->onDisconnect([this](void *h, AsyncClient *client)                { this->disconnected = true; });
-    this->tcp_client->onTimeout(   [this](void *h, AsyncClient *client, uint32_t time) { this->disconnected = true; });
-
-    this->tcp_client->onData([&](void *h, AsyncClient *client, void *data, size_t len) {
-        if (len == 0 || data == nullptr)
-        return;
-
-        auto buf = static_cast<uint8_t *>(data);
-        recv_buf.insert(recv_buf.end(), buf, buf + len);
-    }, nullptr);
-}
-
-Monoprice10761::Client::~Client() {
-    delete this->tcp_client;
 }
 
 void ZoneStatus::update(char* zoneStatus){

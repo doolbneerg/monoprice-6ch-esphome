@@ -2,7 +2,7 @@ from esphome.components import time
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart
-from esphome.const import CONF_ID, CONF_PORT, CONF_NUMBER, CONF_NAME
+from esphome.const import CONF_ID, CONF_NUMBER, CONF_NAME
 
 DEPENDENCIES = ["uart"]
 
@@ -28,7 +28,6 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(Monoprice10761),
-            cv.Optional(CONF_PORT, default=4999): cv.port,
             cv.Optional(CONF_EXPANSIONS, default=0): cv.int_range(
                 min=0, max=2
             ),
@@ -42,7 +41,6 @@ CONFIG_SCHEMA = (
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    cg.add(var.set_port(config[CONF_PORT]))
     cg.add(var.set_expansions(config[CONF_EXPANSIONS]))
     inputs = [{'num': i, 'name': "Input " + str(i), 'hide': False} for i in range(1,7)]
     if CONF_INPUTS in config:
