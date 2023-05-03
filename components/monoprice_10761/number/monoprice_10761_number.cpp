@@ -17,7 +17,6 @@ namespace esphome
         void Monoprice10761Number::control(float state)
         {
             this->status_->set(this->data_type_, (uint8_t)(state - this->offset_));
-            // this->status_->update(this->data_type_, (uint8_t) (state-this->offset_));
         }
 
         void Monoprice10761Number::dump_config()
