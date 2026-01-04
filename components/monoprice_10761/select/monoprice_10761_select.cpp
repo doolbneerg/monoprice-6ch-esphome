@@ -9,12 +9,13 @@ namespace esphome
 
         void Monoprice10761Select::setup()
         {
-            std::vector<std::string> options;
+            FixedVector<const char*> options;
+            options.init(6);
             for (uint8_t i = 0; i < 6; i++)
             {
                 if (this->parent_->inputs_[i].hide)
                     continue;
-                std::string name = this->parent_->inputs_[i].name;
+                const char* name = this->parent_->inputs_[i].name.c_str();
                 options.push_back(name);
             }
             this->traits.set_options(options);
