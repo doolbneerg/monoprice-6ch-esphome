@@ -9,9 +9,8 @@ CODEOWNERS = ["@jhenkens"]
 
 Monoprice10761BinarySensor = monoprice_10761_ns.class_("Monoprice10761BinarySensor", binary_sensor.BinarySensor, cg.Component)
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
+CONFIG_SCHEMA = binary_sensor.binary_sensor_schema(Monoprice10761BinarySensor).extend(
     {
-        cv.GenerateID(): cv.declare_id(Monoprice10761BinarySensor),
         cv.GenerateID(CONF_MONOPRICE_10761_ID): cv.use_id(Monoprice10761),
         cv.Required(CONF_ZONE): cv.int_range(min=11, max=36),
         cv.Required(CONF_COMMAND): cv.one_of("LS", "PA", upper=True),

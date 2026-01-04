@@ -9,9 +9,8 @@ CODEOWNERS = ["@jhenkens"]
 
 Monoprice10761Switch = monoprice_10761_ns.class_("Monoprice10761Switch", switch.Switch, cg.Component)
 
-CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend(
+CONFIG_SCHEMA = switch.switch_schema(Monoprice10761Switch).extend(
     {
-        cv.GenerateID(): cv.declare_id(Monoprice10761Switch),
         cv.GenerateID(CONF_MONOPRICE_10761_ID): cv.use_id(Monoprice10761),
         cv.Required(CONF_ZONE): cv.int_range(min=11, max=36),
         cv.Required(CONF_COMMAND): cv.one_of("PR", "MU", "DT", upper=True),

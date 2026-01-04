@@ -9,9 +9,8 @@ CODEOWNERS = ["@jhenkens"]
 
 Monoprice10761Select = monoprice_10761_ns.class_("Monoprice10761Select", select.Select, cg.Component)
 
-CONFIG_SCHEMA = select.SELECT_SCHEMA.extend(
+CONFIG_SCHEMA = select.select_schema(Monoprice10761Select).extend(
     {
-        cv.GenerateID(): cv.declare_id(Monoprice10761Select),
         cv.GenerateID(CONF_MONOPRICE_10761_ID): cv.use_id(Monoprice10761),
         cv.Required(CONF_ZONE): cv.int_range(min=11, max=36),
         cv.Required(CONF_COMMAND): cv.one_of("CH", upper=True),

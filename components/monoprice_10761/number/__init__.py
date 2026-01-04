@@ -9,9 +9,8 @@ CODEOWNERS = ["@jhenkens"]
 
 Monoprice10761Number = monoprice_10761_ns.class_("Monoprice10761Number", number.Number, cg.Component)
 
-CONFIG_SCHEMA = number.NUMBER_SCHEMA.extend(
+CONFIG_SCHEMA = number.number_schema(Monoprice10761Number).extend(
     {
-        cv.GenerateID(): cv.declare_id(Monoprice10761Number),
         cv.GenerateID(CONF_MONOPRICE_10761_ID): cv.use_id(Monoprice10761),
         cv.Required(CONF_ZONE): cv.int_range(min=11, max=36),
         cv.Required(CONF_COMMAND): cv.one_of("VO", "TR", "BS", "BL", upper=True),
